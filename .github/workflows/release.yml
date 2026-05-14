@@ -29,9 +29,16 @@ jobs:
           Write-Host "Publishing version $version"
 
       - name: Pack
+        shell: pwsh
         run: dotnet pack CapNet/CapNet.csproj --configuration Release --nologo -o packages /p:PackageVersion=${{ steps.version.outputs.version }}
 
       - name: Push to nuget.org
-        run: dotnet nuget push packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key $env:NUGET_API_KEY --skip-duplicate
+        shell: pwsh
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $pkg = Get-ChildItem packages/*.nupkg | Where-Object { $_.Name -notlike '*.symbols.nupkg' } | Select-Object -First 1
+          if (-not $pkg) { throw "No .nupkg found in packages/" }
+          Write-Host "Pushing $($pkg.FullName)"
+          dotnet nuget push $pkg.FullName --source https://api.nuget.org/v3/index.json --api-key $env:NUGET_API_KEY --skip-duplicate
+          if ($LASTEXITCODE -ne 0) { throw "nuget push failed (exit $LASTEXITCODE)" }
