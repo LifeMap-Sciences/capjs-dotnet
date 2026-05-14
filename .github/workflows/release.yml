@@ -7,6 +7,9 @@ on:
 jobs:
   publish-nuget:
     runs-on: windows-latest
+    environment:
+      name: nuget-publish
+      url: https://www.nuget.org/packages/CapNet
     permissions:
       contents: read
     steps:
