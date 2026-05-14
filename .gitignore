@@ -1,0 +1,15 @@
+bin/
+obj/
+*.user
+.vs/
+node_modules/
+test-results/
+playwright-report/
+*.log
+
+# Secrets — never commit
+.env
+.env.local
+
+# Local pack output (use scripts/pack-local.ps1)
+packages/

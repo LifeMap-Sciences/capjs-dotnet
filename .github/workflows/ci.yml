@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install bridge npm deps
+        run: npm install
+        working-directory: CapNet.Bridge.Js
+
+      - name: Restore + build
+        run: dotnet build CapNet.sln --configuration Release --nologo
+
+      - name: Run xUnit tests
+        run: dotnet test CapNet.Tests/CapNet.Tests.csproj --configuration Release --no-build --nologo --verbosity normal
+
+      - name: Install E2E npm deps
+        run: npm install
+        working-directory: CapNet.E2E
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: CapNet.E2E
+
+      - name: Run Playwright E2E
+        run: npx playwright test
+        working-directory: CapNet.E2E
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: CapNet.E2E/playwright-report
+          retention-days: 7

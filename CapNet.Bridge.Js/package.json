@@ -1,0 +1,13 @@
+{
+  "name": "capnet-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thin Node-side bridge that exposes capjs-core to .NET via Jering.Javascript.NodeJS.",
+  "main": "bridge.js",
+  "dependencies": {
+    "capjs-core": "0.1.1"
+  },
+  "optionalDependencies": {
+    "javascript-obfuscator": "^5.4.2"
+  }
+}

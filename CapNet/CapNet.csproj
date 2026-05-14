@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>CapNet</AssemblyName>
+    <RootNamespace>CapNet</RootNamespace>
+
+    <PackageId>CapNet</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>LifeMap Sciences</Authors>
+    <Company>LifeMap Sciences</Company>
+    <Description>Thin .NET wrapper around capjs-core (Cap — privacy-first, self-hosted CAPTCHA). Calls upstream via Jering.Javascript.NodeJS; does not reimplement the protocol.</Description>
+    <PackageTags>captcha;cap;capjs;proof-of-work;pow;rsw;anti-bot;privacy</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/LifeMap-Sciences/capjs-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LifeMap-Sciences/capjs-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+    <PackageReference Include="Jering.Javascript.NodeJS" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>
