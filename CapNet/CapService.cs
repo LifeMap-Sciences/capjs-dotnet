@@ -90,14 +90,21 @@ namespace CapNet
                 };
             }
 
-            // Replay protection: claim the JWT signature exactly once. Get-then-Put has a narrow
-            // race window we accept — see the design doc.
+            // Fail-closed: a "success" outcome with no usable redeem token or expiry is a
+            // capjs-core protocol violation we don't propagate.
+            if (string.IsNullOrEmpty(outcome.Token) || !outcome.Expires.HasValue)
+            {
+                return Failure("invalid_outcome", HttpStatusCode.InternalServerError);
+            }
+
+            // Replay protection: atomically claim the JWT signature exactly once.
             string token = TryExtractBodyToken(bodyJson);
             if (string.IsNullOrEmpty(token))
                 return Failure("invalid_body", HttpStatusCode.BadRequest);
 
             string nonceKey = KeyPrefixNonce + ExtractSignaturePart(token);
-            if (await _state.GetAsync(nonceKey).ConfigureAwait(false) != null)
+            bool claimed = await _state.TryPutIfAbsentAsync(nonceKey, "1", _defaults.RedeemTokenTtl).ConfigureAwait(false);
+            if (!claimed)
             {
                 return new RedeemOutcome
                 {
@@ -107,10 +114,9 @@ namespace CapNet
                     ResponseJson = JsonConvert.SerializeObject(new { success = false, reason = "already_redeemed" }),
                 };
             }
-            await _state.PutAsync(nonceKey, "1", _defaults.RedeemTokenTtl).ConfigureAwait(false);
 
             // capjs-core has already minted the redeem token; store it for back-end /siteverify.
-            long expiresMs = outcome.Expires ?? DateTimeOffset.UtcNow.Add(_defaults.RedeemTokenTtl).ToUnixTimeMilliseconds();
+            long expiresMs = outcome.Expires.Value;
             TimeSpan ttl = DateTimeOffset.FromUnixTimeMilliseconds(expiresMs) - DateTimeOffset.UtcNow;
             if (ttl <= TimeSpan.Zero) ttl = TimeSpan.FromMinutes(1);
             await _state.PutAsync(KeyPrefixRedeem + outcome.Token, expiresMs.ToString(), ttl).ConfigureAwait(false);
@@ -135,10 +141,10 @@ namespace CapNet
         public async Task<bool> VerifyRedeemTokenAsync(string token)
         {
             if (string.IsNullOrEmpty(token)) return false;
-            string key = KeyPrefixRedeem + token;
-            string stored = await _state.GetAsync(key).ConfigureAwait(false);
+            // Atomic read-and-delete — two concurrent verifications can never both see a non-null
+            // stored value for the same token.
+            string stored = await _state.GetAndRemoveAsync(KeyPrefixRedeem + token).ConfigureAwait(false);
             if (string.IsNullOrEmpty(stored)) return false;
-            await _state.RemoveAsync(key).ConfigureAwait(false);
             if (!long.TryParse(stored, out long expiresMs)) return false;
             return expiresMs > DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }

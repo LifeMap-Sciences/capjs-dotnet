@@ -8,7 +8,7 @@
     <RootNamespace>CapNet</RootNamespace>
 
     <PackageId>CapNet</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>LifeMap Sciences</Authors>
     <Company>LifeMap Sciences</Company>
     <Description>Thin .NET wrapper around capjs-core (Cap — privacy-first, self-hosted CAPTCHA). Calls upstream via Jering.Javascript.NodeJS; does not reimplement the protocol.</Description>

@@ -4,7 +4,12 @@ using System.Threading.Tasks;
 
 namespace CapNet.Storage
 {
-    /// <summary>Single-process in-memory backing for <see cref="ICapStateStore"/>. Local-dev and demos only.</summary>
+    /// <summary>
+    /// Single-process in-memory backing for <see cref="ICapStateStore"/>. Local-dev and demos only.
+    /// Atomic operations use <see cref="MemoryCache"/>'s own atomic primitives (Add, Remove return
+    /// value) so they are correct within one AppDomain. Not safe across processes — use a
+    /// distributed adapter for multi-instance deployments.
+    /// </summary>
     public sealed class MemoryCapStateStore : ICapStateStore
     {
         private readonly MemoryCache _cache;
@@ -27,6 +32,21 @@ namespace CapNet.Storage
         {
             _cache.Remove(key);
             return Task.CompletedTask;
+        }
+
+        public Task<bool> TryPutIfAbsentAsync(string key, string value, TimeSpan ttl)
+        {
+            // MemoryCache.Add returns true if the item was added, false if it already existed.
+            var policy = new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.UtcNow.Add(ttl) };
+            bool added = _cache.Add(key, value ?? string.Empty, policy);
+            return Task.FromResult(added);
+        }
+
+        public Task<string> GetAndRemoveAsync(string key)
+        {
+            // MemoryCache.Remove returns the prior value atomically (single internal lock).
+            object prior = _cache.Remove(key);
+            return Task.FromResult(prior as string);
         }
     }
 }
