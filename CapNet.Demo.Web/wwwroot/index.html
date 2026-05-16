@@ -37,6 +37,10 @@
     const bypass = urlParams.get('bypass') === '1';
     const apiPrefix = bypass ? '/cap-test/' : '/cap/';
 
+    // Self-hosted assets — point the widget's WASM loader at our own /cap-assets/ route
+    // before the script tag below executes.
+    window.CAP_CUSTOM_WASM_URL = '/cap-assets/cap_wasm_bg.wasm';
+
     const widget = document.getElementById('cap');
     widget.setAttribute('data-cap-api-endpoint', apiPrefix);
 
@@ -106,6 +110,6 @@
     });
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@cap.js/widget@0.1.51/cap.min.js" defer></script>
+  <script src="/cap-assets/cap.min.js" defer></script>
 </body>
 </html>

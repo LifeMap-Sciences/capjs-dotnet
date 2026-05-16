@@ -19,12 +19,15 @@ namespace CapNet.Demo.Web
         public static ChallengeOptions ArmedOptions { get; private set; }
         public static ChallengeOptions TestOptions { get; private set; }
         public static ChallengeOptions Format2Options { get; private set; }
+        /// <summary>Directory that holds bridge.js + node_modules. CapController streams assets from here.</summary>
+        public static string BridgeRoot { get; private set; }
         private static ServiceProvider _serviceProvider;
 
         public void Configuration(IAppBuilder app)
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string bridgePath = Path.Combine(baseDir, "bridge", "bridge.js");
+            BridgeRoot = Path.Combine(baseDir, "bridge");
+            string bridgePath = Path.Combine(BridgeRoot, "bridge.js");
 
             var services = new ServiceCollection();
             services.AddNodeJS();

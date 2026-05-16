@@ -1,13 +1,33 @@
+using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
+using CapNet.Assets;
 using CapNet.Challenges;
 
 namespace CapNet.Demo.Web.Controllers
 {
     public class CapController : ApiController
     {
+        // ── Self-hosted client assets ─────────────────────────────────────────
+        // Eliminates the third-party CDN dependency. Assets ship inside the bridge's
+        // node_modules and are served verbatim with a 1-day cache header.
+
+        [HttpGet, Route("cap-assets/cap.min.js")]
+        public HttpResponseMessage WidgetScript()
+        {
+            return StreamAsset(CapAssets.WidgetScriptPath(Startup.BridgeRoot), "application/javascript");
+        }
+
+        [HttpGet, Route("cap-assets/cap_wasm_bg.wasm")]
+        public HttpResponseMessage WasmModule()
+        {
+            return StreamAsset(CapAssets.WasmModulePath(Startup.BridgeRoot), "application/wasm");
+        }
+
+
         // ── Armed (production-shaped) endpoints ───────────────────────────────
         [HttpPost, Route("cap/challenge")]
         public async Task<HttpResponseMessage> Challenge()
@@ -63,6 +83,22 @@ namespace CapNet.Demo.Web.Controllers
             {
                 Content = new StringContent(json ?? "{}", Encoding.UTF8, "application/json"),
             };
+        }
+
+        private static HttpResponseMessage StreamAsset(string path, string contentType)
+        {
+            var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StreamContent(stream),
+            };
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            response.Headers.CacheControl = new CacheControlHeaderValue
+            {
+                Public = true,
+                MaxAge = System.TimeSpan.FromHours(24),
+            };
+            return response;
         }
     }
 }

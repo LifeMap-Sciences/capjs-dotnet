@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapNet" Version="0.1.0" />
+    <ProjectReference Include="..\CapNet\CapNet.csproj" />
   </ItemGroup>
 
   <ItemGroup>
